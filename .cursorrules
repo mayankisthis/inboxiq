@@ -1,0 +1,25 @@
+Project Name: InboxIQ
+
+Description:
+InboxIQ is an AI-powered smart email assistant that sits on top of Gmail rather than replacing it.
+
+Tech Stack:
+- Flask backend
+- SQLite initially
+- Gmail API
+- HTML/CSS/JavaScript frontend
+- Scikit-Learn for ML
+
+Architecture Rules:
+- Business logic goes in services/
+- Routes should remain thin.
+- ML code lives in app/ml/
+- Gmail API logic lives in gmail_service.py
+- Environment variables go in .env
+- Prefer clean, modular code.
+
+Project Goal:
+Build a production-quality project suitable for SDE internships where ML is only a component of the application rather than the entire application.
+
+Current Milestone:
+Create a minimal Flask application that starts successfully and serves a homepage.
