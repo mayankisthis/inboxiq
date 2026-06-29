@@ -2,10 +2,18 @@ import { useEffect, useState } from "react";
 import {
   fetchCurrentUser,
   fetchHealth,
+  fetchRecentEmails,
   getGoogleLoginUrl,
   logout,
 } from "./api";
 import "./App.css";
+
+function formatReceivedDate(isoDate) {
+  return new Date(isoDate).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
 
 function App() {
   const [healthStatus, setHealthStatus] = useState(null);
@@ -15,7 +23,10 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
-  const [authMessage, setAuthMessage] = useState(null);
+
+  const [emails, setEmails] = useState([]);
+  const [emailsLoading, setEmailsLoading] = useState(false);
+  const [emailsError, setEmailsError] = useState(null);
 
   useEffect(() => {
     async function loadHealth() {
@@ -38,9 +49,7 @@ function App() {
         const params = new URLSearchParams(window.location.search);
         const authResult = params.get("auth");
 
-        if (authResult === "success") {
-          setAuthMessage("Google sign-in successful.");
-        } else if (authResult === "error") {
+        if (authResult === "error") {
           setAuthError(params.get("message") || "Google sign-in failed.");
         }
 
@@ -60,12 +69,37 @@ function App() {
     loadUser();
   }, []);
 
+  useEffect(() => {
+    if (!user?.authenticated) {
+      setEmails([]);
+      setEmailsError(null);
+      return;
+    }
+
+    async function loadEmails() {
+      setEmailsLoading(true);
+      setEmailsError(null);
+
+      try {
+        const data = await fetchRecentEmails();
+        setEmails(data.emails || []);
+      } catch (err) {
+        setEmailsError(err.message || "Failed to load recent emails.");
+      } finally {
+        setEmailsLoading(false);
+      }
+    }
+
+    loadEmails();
+  }, [user]);
+
   async function handleLogout() {
     try {
       await logout();
       setUser(null);
-      setAuthMessage(null);
+      setEmails([]);
       setAuthError(null);
+      setEmailsError(null);
     } catch (err) {
       setAuthError(err.message || "Failed to log out.");
     }
@@ -88,21 +122,8 @@ function App() {
       <section className="auth-panel" aria-live="polite">
         {authLoading && <p className="auth-panel__loading">Checking sign-in status…</p>}
 
-        {!authLoading && authMessage && (
-          <p className="auth-panel__success">{authMessage}</p>
-        )}
-
         {!authLoading && authError && (
           <p className="auth-panel__error">Error: {authError}</p>
-        )}
-
-        {!authLoading && user?.authenticated && (
-          <div className="auth-panel__signed-in">
-            <p className="auth-panel__success">Signed in as {user.email}</p>
-            <button type="button" className="btn-logout" onClick={handleLogout}>
-              Sign out
-            </button>
-          </div>
         )}
 
         {!authLoading && !user?.authenticated && (
@@ -129,6 +150,44 @@ function App() {
           </a>
         )}
       </section>
+
+      {!authLoading && user?.authenticated && (
+        <section className="inbox">
+          <header className="inbox__header">
+            <div>
+              <h2 className="inbox__title">Recent emails</h2>
+              <p className="inbox__subtitle">Signed in as {user.email}</p>
+            </div>
+            <button type="button" className="btn-logout" onClick={handleLogout}>
+              Sign out
+            </button>
+          </header>
+
+          {emailsLoading && <p className="inbox__loading">Loading recent emails…</p>}
+          {emailsError && <p className="inbox__error">Error: {emailsError}</p>}
+
+          {!emailsLoading && !emailsError && emails.length === 0 && (
+            <p className="inbox__empty">No recent emails found.</p>
+          )}
+
+          {!emailsLoading && !emailsError && emails.length > 0 && (
+            <ul className="email-list">
+              {emails.map((email, index) => (
+                <li key={`${email.received_at}-${index}`} className="email-card">
+                  <div className="email-card__header">
+                    <span className="email-card__sender">{email.sender}</span>
+                    <time className="email-card__date" dateTime={email.received_at}>
+                      {formatReceivedDate(email.received_at)}
+                    </time>
+                  </div>
+                  <h3 className="email-card__subject">{email.subject}</h3>
+                  <p className="email-card__snippet">{email.snippet}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
     </main>
   );
 }

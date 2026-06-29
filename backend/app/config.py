@@ -30,8 +30,6 @@ class Settings:
 
 settings = Settings()
 
-print("GOOGLE_CLIENT_ID =", repr(settings.GOOGLE_CLIENT_ID))
-print("GOOGLE_CLIENT_SECRET exists =", bool(settings.GOOGLE_CLIENT_SECRET))
 
 if settings.DEBUG:
   os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")

@@ -38,3 +38,16 @@ export async function logout() {
 export function getGoogleLoginUrl() {
   return `${API_BASE_URL}/api/auth/google`;
 }
+
+export async function fetchRecentEmails() {
+  const response = await fetch(`${API_BASE_URL}/api/emails/recent`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to fetch emails (${response.status})`);
+  }
+
+  return response.json();
+}
