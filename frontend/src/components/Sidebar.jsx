@@ -16,6 +16,7 @@ export default function Sidebar({
   onLogout,
   isOpen,
   onClose,
+  onOpenRulesModal,
 }) {
   return (
     <>
@@ -33,7 +34,7 @@ export default function Sidebar({
           <span className="sidebar__logo">IQ</span>
           <div>
             <p className="sidebar__title">InboxIQ</p>
-            <p className="sidebar__tagline">Smart email assistant</p>
+            <p className="sidebar__tagline">AI-powered email intelligence</p>
           </div>
         </div>
 
@@ -57,6 +58,19 @@ export default function Sidebar({
             </button>
           ))}
         </nav>
+
+        <div className="sidebar__divider" />
+        <div className="sidebar__section-title">Settings</div>
+        <button
+          type="button"
+          className="sidebar__item"
+          onClick={onOpenRulesModal}
+        >
+          <span className="sidebar__item-icon" aria-hidden="true">
+            ⚙️
+          </span>
+          <span className="sidebar__item-label">Priority Rules</span>
+        </button>
 
         <div className="sidebar__footer">
           <p className="sidebar__user" title={userEmail}>

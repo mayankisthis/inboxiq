@@ -1,6 +1,6 @@
 /**
- * Maps API email objects to a UI-friendly shape with placeholders
- * for future ML features (priority, categories, AI summaries).
+ * Maps API email objects to a UI-friendly shape.
+ * Priority comes from the backend classification service.
  */
 export function enrichEmails(emails = []) {
   return emails.map((email, index) => ({
@@ -9,9 +9,8 @@ export function enrichEmails(emails = []) {
     subject: email.subject,
     snippet: email.snippet,
     receivedAt: email.received_at,
-    // Future: populated by backend / ML pipeline
-    priority: null,
-    category: null,
-    aiSummary: null,
+    priority: email.priority || "Normal",
+    category: email.category || null,
+    aiSummary: email.aiSummary || null,
   }));
 }

@@ -161,3 +161,19 @@
     transform: translateX(0);
   }
 }
+
+.sidebar__divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: 0.75rem 0.5rem;
+}
+
+.sidebar__section-title {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  padding: 0.25rem 0.75rem;
+  margin-bottom: 0.25rem;
+}

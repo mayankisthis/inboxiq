@@ -17,6 +17,7 @@ function App() {
   const [emails, setEmails] = useState([]);
   const [emailsLoading, setEmailsLoading] = useState(false);
   const [emailsError, setEmailsError] = useState(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     async function loadUser() {
@@ -66,7 +67,7 @@ function App() {
     }
 
     loadEmails();
-  }, [user]);
+  }, [user, refreshTrigger]);
 
   async function handleLogout() {
     try {
@@ -91,6 +92,7 @@ function App() {
       error={emailsError}
       userEmail={user.email}
       onLogout={handleLogout}
+      onRefreshEmails={() => setRefreshTrigger((prev) => prev + 1)}
     />
   );
 }

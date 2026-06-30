@@ -51,3 +51,34 @@ export async function fetchRecentEmails() {
 
   return response.json();
 }
+
+export async function fetchRules() {
+  const response = await fetch(`${API_BASE_URL}/api/rules`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to fetch rules (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function saveRules(rules) {
+  const response = await fetch(`${API_BASE_URL}/api/rules`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ rules }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to save rules (${response.status})`);
+  }
+
+  return response.json();
+}
