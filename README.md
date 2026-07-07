@@ -1,97 +1,236 @@
 # InboxIQ
 
-InboxIQ is a production-grade, AI-powered smart email client built on top of the Gmail API. It leverages Google's Gemini models to provide real-time email prioritization, rich summaries, suggested action lists, tone-specific draft responses, and natural language semantic searching.
+An AI-powered Gmail assistant that helps users manage their inbox more efficiently using intelligent email summaries, semantic search, and AI-generated replies.
+
+![React](https://img.shields.io/badge/React-19-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)
+![Python](https://img.shields.io/badge/Python-3.13-yellow)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
+
+## Live Demo
+
+**Frontend:** https://inboxiq-two.vercel.app
+
+**Backend:** https://inboxiq-backend-0fnp.onrender.com
 
 ---
 
-## Architecture Diagram
+## Features
 
-```mermaid
-graph TD
-    A[React + Vite Frontend] -->|HTTP Requests| B[FastAPI Backend]
-    A -->|OAuth Consent Flow| C[Google Accounts Auth]
-    B -->|MIME Parsing & Headers| D[Gmail API]
-    B -->|Prompting Tone & Summary| E[Google Gemini API]
-    B -->|Custom Rules Storage| F[Local Cache / JSON Store]
-```
-
----
-
-## Core Features
-
-- **📬 Full Email Client**: Lazily loads and parses complete email bodies (multipart MIME support) with full formatting.
-- **⭐ Gmail Quick Actions**: Optimistic UI triggers for toggling stars, marking read/unread, and archiving inbox messages with a multi-second Undo overlay.
-- **⚡ Gemini AI Priority Classifier**: Replaces static rule-based prioritization with a fine-tuned Gemini analysis evaluating messages as Urgent, Important, Normal, or Low Priority.
-- **📝 Intelligent AI Drafts**: Instantly generates contextual reply drafts matching four tones (Professional, Friendly, Formal, and Short) with a copy-clipboard toggle.
-- **🔎 Natural Language Semantic Search**: Filter and lookup messages using instant keywords or semantic dates (e.g., "emails from github today", "urgent interview").
-- **📅 Daily Digest Summary**: Provides a visual metadata card indicating read times, urgency counters, and a checkbox checklist of critical action items.
+- Google OAuth 2.0 authentication
+- Gmail integration
+- AI-generated email replies
+- AI daily inbox summary
+- Natural language email search
+- Star / Unstar emails
+- Mark emails as read or unread
+- Archive emails
+- Smart rule management
+- Responsive UI
+- Secure session-based authentication
 
 ---
 
 ## Tech Stack
 
-- **Frontend**: React, Vite, Vanilla CSS
-- **Backend**: FastAPI, Python 3.11+, Uvicorn
-- **SDKs & APIs**: Google APIs Client, `google-genai` (Gemini SDK), standard email/MIME modules.
+### Frontend
+
+- React
+- Vite
+- CSS
+- Fetch API
+
+### Backend
+
+- FastAPI
+- Python
+- Google Gmail API
+- Google OAuth
+- Gemini API
+
+### Deployment
+
+- Vercel
+- Render
 
 ---
 
-## Installation & Setup
 
-### Environment Variables
-Configure a `.env` file at the root of the project:
 
-```env
-# FastAPI Configurations
-SECRET_KEY=production-session-cookie-secret-key
-DEBUG=0
-SESSION_SECURE=1
-CORS_ORIGINS=https://inboxiq-client.vercel.app,http://localhost:5173
+## Project Structure
 
-# Google OAuth Credentials
-GOOGLE_CLIENT_ID=your-google-oauth-client-id
-GOOGLE_CLIENT_SECRET=your-google-oauth-client-secret
-GOOGLE_REDIRECT_URI=https://inboxiq-api.onrender.com/api/auth/google/callback
-FRONTEND_URL=https://inboxiq-client.vercel.app
-
-# Google Gemini Credentials
-GEMINI_API_KEY=your-gemini-api-key
+```
+InboxIQ
+│
+├── frontend
+│   ├── src
+│   ├── components
+│   ├── utils
+│   └── api.js
+│
+├── backend
+│   ├── app
+│   │   ├── routes
+│   │   ├── services
+│   │   ├── models
+│   │   ├── ml
+│   │   └── main.py
+│   └── requirements.txt
+│
+└── README.md
 ```
 
-### Running Locally
+---
 
-1. **Backend**:
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   python run.py
-   ```
-2. **Frontend**:
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
+## Getting Started
+
+### Clone
+
+```bash
+git clone https://github.com/mayankisthis/inboxiq.git
+
+cd inboxiq
+```
+
+---
+
+## Backend Setup
+
+```bash
+cd backend
+
+python -m venv venv
+
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python run.py
+```
+
+---
+
+## Frontend Setup
+
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
+
+---
+
+## Environment Variables
+
+### Backend
+
+Create a `.env`
+
+```env
+SECRET_KEY=
+
+GOOGLE_CLIENT_ID=
+
+GOOGLE_CLIENT_SECRET=
+
+GOOGLE_REDIRECT_URI=http://localhost:8000/api/auth/google/callback
+
+FRONTEND_URL=http://localhost:5173
+
+CORS_ORIGINS=http://localhost:5173
+
+SESSION_SECURE=0
+
+GEMINI_API_KEY=
+```
+
+---
+
+### Frontend
+
+```
+VITE_API_URL=http://localhost:8000
+```
+
+---
+
+## AI Features
+
+### AI Daily Digest
+
+Generates a concise summary of important emails received during the day.
+
+### Smart Reply
+
+Creates context-aware replies using Gemini.
+
+### Natural Language Search
+
+Search emails using queries like
+
+- Emails from Amazon
+- Unread emails from today
+- Bills this month
+- Interview emails
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| GET | /api/auth/google | Login |
+| GET | /api/auth/me | Current User |
+| POST | /api/auth/logout | Logout |
+| GET | /api/emails/recent | Recent Emails |
+| GET | /api/emails/digest | AI Daily Digest |
+| POST | /api/emails/reply | Generate Reply |
+| POST | /api/emails/send-reply | Send Reply |
+| GET | /api/emails/search | Search Emails |
+| POST | /api/emails/{id}/star | Toggle Star |
+| POST | /api/emails/{id}/read | Toggle Read |
+| POST | /api/emails/{id}/archive | Archive |
 
 ---
 
 ## Deployment
 
-### Frontend (Vercel)
-Set up the environment variables on Vercel:
-- `VITE_API_BASE_URL` pointing to the Render backend URL.
-- Deploy Vite output using the Vercel builder.
+### Frontend
 
-### Backend (Render)
-Configure a Web Service on Render:
-- **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Set all environment variables (including `SESSION_SECURE=1`).
+Hosted on Vercel.
+
+### Backend
+
+Hosted on Render.
+
+Authentication is secured using Google OAuth and HTTPS-only session cookies.
+
+---
+
+## Future Improvements
+
+- AI email categorization
+- Calendar integration
+- Attachment summarization
+- Priority inbox
+- Email scheduling
+- Multiple Gmail account support
+- Voice assistant
+
+---
+
+## Author
+
+**Mayank Vaishnav**
+
+GitHub: https://github.com/mayankisthis
+
+LinkedIn: (Add your LinkedIn)
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+MIT License
