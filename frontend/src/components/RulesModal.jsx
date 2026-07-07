@@ -77,10 +77,13 @@ export default function RulesModal({ isOpen, onClose, onRulesSaved }) {
           ) : (
             <div className="rules-modal__list">
               {rules.length === 0 ? (
-                <div className="rules-modal__empty">
-                  <p>No custom rules defined yet.</p>
-                  <p className="rules-modal__empty-help">
-                    Add custom rules to override default email classifications.
+                <div className="rules-modal__empty" style={{ textAlign: "center", padding: "2.5rem 1rem", border: "2px dashed var(--color-border)", borderRadius: "8px", background: "var(--color-surface-muted)" }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "1rem", opacity: 0.7 }}>
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                  <p style={{ fontWeight: 600, fontSize: "0.9375rem", margin: "0 0 0.25rem" }}>No custom rules</p>
+                  <p className="rules-modal__empty-help" style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>
+                    Add rules to override default email classifications based on sender, subject, or snippet.
                   </p>
                 </div>
               ) : (

@@ -1,9 +1,10 @@
+import React from "react";
 import { formatEmailTimestamp } from "../utils/formatDate";
 import { getPriorityClass } from "../utils/priority";
 import { getAvatarColor } from "../utils/avatar";
 import "./EmailCard.css";
 
-export default function EmailCard({ email, isSelected, isUnread, onSelect, onToggleStar }) {
+export default React.memo(function EmailCard({ email, isSelected, isUnread, onSelect, onToggleStar }) {
   const priorityClass = getPriorityClass(email.priority);
 
   return (
@@ -65,4 +66,4 @@ export default function EmailCard({ email, isSelected, isUnread, onSelect, onTog
       </div>
     </button>
   );
-}
+});

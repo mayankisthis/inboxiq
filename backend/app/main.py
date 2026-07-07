@@ -23,8 +23,8 @@ app.add_middleware(
   secret_key=settings.SECRET_KEY,
   session_cookie="inboxiq_session",
   max_age=60 * 60 * 24 * 7,
-  same_site="lax",
-  https_only=False,
+  same_site="none" if settings.SESSION_SECURE else "lax",
+  https_only=settings.SESSION_SECURE,
 )
 
 app.include_router(health_router, prefix="/api")

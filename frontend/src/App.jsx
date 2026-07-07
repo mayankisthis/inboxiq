@@ -68,7 +68,13 @@ function App() {
         setEmails(enrichEmails(emailsData.emails || []));
         setDigest(digestData);
       } catch (err) {
-        setEmailsError(err.message || "Failed to load recent emails.");
+        const errMsg = err.message || "";
+        if (errMsg.includes("401") || errMsg.includes("unauthorized") || errMsg.includes("authenticated")) {
+          setUser(null);
+          setAuthError("Session expired. Please sign in again.");
+        } else {
+          setEmailsError(errMsg || "Failed to load recent emails.");
+        }
       } finally {
         setEmailsLoading(false);
         setDigestLoading(false);

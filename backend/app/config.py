@@ -28,6 +28,7 @@ class Settings:
   FRONTEND_URL: str = os.environ.get("FRONTEND_URL", "http://localhost:5173")
   GOOGLE_SCOPES: list[str] = [GMAIL_MODIFY_SCOPE , GMAIL_SEND_SCOPE]
   GEMINI_API_KEY: str = os.environ.get("GEMINI_API_KEY", "")
+  SESSION_SECURE: bool = os.environ.get("SESSION_SECURE", "0") == "1"
 
 
 settings = Settings()

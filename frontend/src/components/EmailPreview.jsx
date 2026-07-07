@@ -138,14 +138,30 @@ export default function EmailPreview({
   };
 
   const renderSkeleton = () => (
-    <div className="email-preview__skeleton" aria-label="Loading email content">
-      <div className="email-preview__skeleton-line" />
-      <div className="email-preview__skeleton-line email-preview__skeleton-line--medium" />
-      <div className="email-preview__skeleton-line" />
-      <div className="email-preview__skeleton-line email-preview__skeleton-line--short" />
-      <div className="email-preview__skeleton-line" />
-      <div className="email-preview__skeleton-line email-preview__skeleton-line--medium" />
-      <div className="email-preview__skeleton-line email-preview__skeleton-line--short" />
+    <div className="email-preview__skeleton" aria-label="Loading email content" style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1.5rem" }}>
+      {/* Subject line shimmer */}
+      <div className="shimmer" style={{ height: "2rem", width: "70%", borderRadius: "6px" }} />
+      {/* Sender profile meta shimmer */}
+      <div style={{ display: "flex", gap: "0.75rem", alignItems: "center", margin: "0.5rem 0 1rem" }}>
+        <div className="shimmer" style={{ height: "2.5rem", width: "2.5rem", borderRadius: "50%", flexShrink: 0 }} />
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flex: 1 }}>
+          <div className="shimmer" style={{ height: "0.875rem", width: "140px", borderRadius: "4px" }} />
+          <div className="shimmer" style={{ height: "0.75rem", width: "80px", borderRadius: "4px" }} />
+        </div>
+      </div>
+      {/* AI Summary Card shimmer */}
+      <div style={{ border: "1px solid var(--color-border)", borderRadius: "12px", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem", marginBottom: "1rem" }}>
+        <div className="shimmer" style={{ height: "1.25rem", width: "120px", borderRadius: "4px", marginBottom: "0.25rem" }} />
+        <div className="shimmer" style={{ height: "0.875rem", width: "90%", borderRadius: "4px" }} />
+        <div className="shimmer" style={{ height: "0.875rem", width: "95%", borderRadius: "4px" }} />
+        <div className="shimmer" style={{ height: "0.875rem", width: "60%", borderRadius: "4px" }} />
+      </div>
+      {/* Body text shimmers */}
+      <div className="shimmer" style={{ height: "1rem", width: "100%", borderRadius: "4px", marginTop: "1rem" }} />
+      <div className="shimmer" style={{ height: "1rem", width: "95%", borderRadius: "4px" }} />
+      <div className="shimmer" style={{ height: "1rem", width: "80%", borderRadius: "4px" }} />
+      <div className="shimmer" style={{ height: "1rem", width: "90%", borderRadius: "4px" }} />
+      <div className="shimmer" style={{ height: "1rem", width: "40%", borderRadius: "4px" }} />
     </div>
   );
 
@@ -348,7 +364,11 @@ export default function EmailPreview({
                 key={idx}
                 type="button"
                 className="email-preview__action-chip"
-                onClick={() => alert(`Triggered action: "${action}"`)}
+                onClick={() => {
+                  if (setToast) {
+                    setToast({ message: `Action triggered: "${action}"`, type: "success" });
+                  }
+                }}
               >
                 <span className="email-preview__action-chip-icon" aria-hidden="true">
                   {getActionIcon(action)}
@@ -391,9 +411,12 @@ export default function EmailPreview({
               </div>
 
               {replyLoading ? (
-                <div className="email-preview__reply-loading">
-                  <div className="email-preview__reply-spinner"></div>
-                  <span>Generating your draft response...</span>
+                <div className="email-preview__reply-skeleton-container" aria-label="Generating AI reply" style={{ marginTop: "1rem" }}>
+                  <div className="shimmer" style={{ height: "100px", borderRadius: "8px", width: "100%", marginBottom: "1rem" }} />
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <div className="shimmer" style={{ height: "36px", width: "80px", borderRadius: "6px" }} />
+                    <div className="shimmer" style={{ height: "36px", width: "100px", borderRadius: "6px", marginLeft: "auto" }} />
+                  </div>
                 </div>
               ) : (
                 <>

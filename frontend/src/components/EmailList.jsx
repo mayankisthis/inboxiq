@@ -391,38 +391,83 @@ export default function EmailList({
       )}
 
       {loading && (
-        <div className="email-list-panel__state">
-          <p>Loading emails…</p>
+        <div className="email-list-skeleton" aria-label="Loading emails">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <div key={idx} className="email-list-skeleton__item" style={{ display: "flex", gap: "1rem", padding: "1rem", borderBottom: "1px solid var(--color-border)" }}>
+              <div className="email-list-skeleton__avatar shimmer" style={{ width: "2.25rem", height: "2.25rem", borderRadius: "50%", flexShrink: 0 }} />
+              <div className="email-list-skeleton__content" style={{ flex: 1, minWidth: 0 }}>
+                <div className="email-list-skeleton__row" style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <div className="email-list-skeleton__sender shimmer" style={{ height: "1rem", width: "100px", borderRadius: "4px" }} />
+                  <div className="email-list-skeleton__date shimmer" style={{ height: "0.75rem", width: "50px", borderRadius: "4px" }} />
+                </div>
+                <div className="email-list-skeleton__subject shimmer" style={{ height: "1rem", width: "180px", borderRadius: "4px", marginBottom: "0.5rem" }} />
+                <div className="email-list-skeleton__snippet shimmer" style={{ height: "0.75rem", width: "100%", borderRadius: "4px" }} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
       {error && (
-        <div className="email-list-panel__state email-list-panel__state--error">
-          <p>{error}</p>
+        <div className="email-list-panel__state email-list-panel__state--error" style={{ textAlign: "center", padding: "3rem 1.5rem" }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "1rem" }}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 0.25rem", color: "#ef4444" }}>Failed to load emails</p>
+          <p className="email-list-panel__empty-subtitle" style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>{error}</p>
         </div>
       )}
 
-      {!loading && !error && !isInbox && (
-        <div className="email-list-panel__state">
-          <p>This folder will be available in a future update.</p>
+      {!loading && !error && !isInbox && filteredEmails.length === 0 && (
+        <div className="email-list-panel__state" style={{ textAlign: "center", padding: "4rem 1.5rem" }}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "1rem", opacity: 0.6 }}>
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </svg>
+          <p className="email-list-panel__empty-title" style={{ fontWeight: 600, fontSize: "1.0625rem", margin: "0 0 0.25rem" }}>Empty Folder</p>
+          <p className="email-list-panel__empty-subtitle" style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>There are no messages in this folder.</p>
         </div>
       )}
 
       {!loading && !error && isInbox && emails.length === 0 && (
-        <div className="email-list-panel__state">
-          <p>No emails found.</p>
+        <div className="email-list-panel__state" style={{ textAlign: "center", padding: "4rem 1.5rem" }}>
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "1rem", opacity: 0.6 }}>
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <p className="email-list-panel__empty-title" style={{ fontWeight: 600, fontSize: "1.0625rem", margin: "0 0 0.25rem" }}>Inbox is empty</p>
+          <p className="email-list-panel__empty-subtitle" style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>You're all caught up! Enjoy your clean inbox.</p>
         </div>
       )}
 
       {!loading && !error && isInbox && emails.length > 0 && filteredEmails.length === 0 && (
-        <div className="email-list-panel__state">
-          <p className="email-list-panel__empty-title">No emails found</p>
-          <p className="email-list-panel__empty-subtitle">Try another keyword.</p>
+        <div className="email-list-panel__state" style={{ textAlign: "center", padding: "3rem 1.5rem" }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-muted)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: "1rem", opacity: 0.7 }}>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <p className="email-list-panel__empty-title" style={{ fontWeight: 600, fontSize: "1rem", margin: "0 0 0.25rem" }}>No search results</p>
+          <p className="email-list-panel__empty-subtitle" style={{ fontSize: "0.8125rem", color: "var(--color-text-muted)", margin: 0 }}>We couldn't find any emails matching that search query.</p>
         </div>
       )}
 
       {!loading && !error && isInbox && filteredEmails.length > 0 && (
         <div className="email-list-panel__scroll">
+          {digestLoading && (
+            <div className="daily-digest-skeleton" aria-label="Loading daily digest" style={{ padding: "1.25rem", borderBottom: "1px solid var(--color-border)" }}>
+              <div className="daily-digest-skeleton__header shimmer" style={{ height: "1.25rem", width: "120px", borderRadius: "4px", marginBottom: "0.875rem" }} />
+              <div className="daily-digest-skeleton__grid" style={{ display: "flex", gap: "0.75rem" }}>
+                {Array.from({ length: 5 }).map((_, idx) => (
+                  <div key={idx} className="daily-digest-skeleton__card shimmer" style={{ flex: 1, height: "60px", borderRadius: "8px" }} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {digest && !digestLoading && (
             <div className="daily-digest">
               <header
