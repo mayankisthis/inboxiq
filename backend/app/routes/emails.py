@@ -9,6 +9,9 @@ from app.services.action_service import get_suggested_actions
 
 router = APIRouter(prefix="/emails", tags=["emails"])
 
+# Cache of fetched emails per user: {user_email: emails_list}
+_user_emails_cache = {}
+
 
 @router.get("/recent")
 def recent_emails(request: Request, pageToken: str = None):
@@ -34,10 +37,48 @@ def recent_emails(request: Request, pageToken: str = None):
         email.get("subject", ""),
         email.get("snippet", ""),
       )
+    if user_email:
+      _user_emails_cache[user_email] = emails
   except Exception as exc:
     raise HTTPException(status_code=502, detail=f"Failed to fetch emails: {exc}") from exc
 
   return {"emails": emails, "nextPageToken": next_page_token}
+
+
+@router.get("/search")
+def search_emails(request: Request, q: str = ""):
+  credentials = get_user_credentials(request)
+  if not credentials:
+    raise HTTPException(status_code=401, detail="Not authenticated")
+
+  user = get_session_user(request)
+  user_email = user.get("email") if user else ""
+  rules = load_rules(user_email) if user_email else []
+
+  try:
+    emails = _user_emails_cache.get(user_email)
+    if not emails:
+      raw_emails, _ = get_recent_emails(credentials, limit=50)
+      emails = add_priority_to_emails(raw_emails, rules)
+      for email in emails:
+        email["aiSummary"] = generate_summary(
+          email.get("sender", ""),
+          email.get("subject", ""),
+          email.get("snippet", ""),
+        )
+        email["suggestedActions"] = get_suggested_actions(
+          email.get("sender", ""),
+          email.get("subject", ""),
+          email.get("snippet", ""),
+        )
+      if user_email:
+        _user_emails_cache[user_email] = emails
+
+    from app.services.search_service import filter_emails_semantically
+    filtered = filter_emails_semantically(emails, q)
+    return {"emails": filtered}
+  except Exception as exc:
+    raise HTTPException(status_code=502, detail=f"Failed to search emails: {exc}") from exc
 
 
 @router.get("/message/{message_id}")

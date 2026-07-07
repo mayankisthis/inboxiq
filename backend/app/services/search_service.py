@@ -1,8 +1,10 @@
 """Rule-based Natural Language Search intent extractor for InboxIQ.
 
-Extracts filter structures from query strings.
+Extracts filter structures from query strings and provides semantic filtering.
 """
 
+from datetime import datetime, date, timezone, timedelta
+import html
 import re
 
 def parse_query(query: str) -> dict:
@@ -72,3 +74,117 @@ def parse_query(query: str) -> dict:
             filters["keywords"].append(kw)
 
     return filters
+
+
+def match_email(email: dict, q: str) -> bool:
+    """Returns True if the email matches the search query semantically."""
+    if not q:
+        return True
+        
+    q = q.lower().strip()
+    
+    # 1. First, check specific natural language intents
+    # Check for "today"
+    if "today" in q:
+        received_at_str = email.get("received_at") or email.get("date")
+        if received_at_str:
+            try:
+                dt = datetime.fromisoformat(received_at_str)
+                # Check match against system UTC or local date
+                if dt.date() == date.today() or dt.date() == (datetime.now(timezone.utc).date()):
+                    return True
+            except Exception:
+                pass
+                
+    # Check for "yesterday"
+    if "yesterday" in q:
+        received_at_str = email.get("received_at") or email.get("date")
+        if received_at_str:
+            try:
+                dt = datetime.fromisoformat(received_at_str)
+                yesterday_utc = datetime.now(timezone.utc).date() - timedelta(days=1)
+                yesterday_local = date.today() - timedelta(days=1)
+                if dt.date() == yesterday_utc or dt.date() == yesterday_local:
+                    return True
+            except Exception:
+                pass
+
+    # Check for "security" / "security alerts"
+    if "security" in q:
+        security_patterns = ["security", "password reset", "verify", "verification", "login", "alert", "access", "revoke", "otp"]
+        email_text = f"{email.get('sender', '')} {email.get('subject', '')} {email.get('snippet', '')}".lower()
+        if any(pat in email_text for pat in security_patterns):
+            return True
+
+    # Check for "newsletter" / "newsletters"
+    if "newsletter" in q or "newsletters" in q:
+        newsletter_patterns = ["newsletter", "digest", "weekly update", "monthly update"]
+        email_text = f"{email.get('sender', '')} {email.get('subject', '')} {email.get('snippet', '')}".lower()
+        if any(pat in email_text for pat in newsletter_patterns):
+            return True
+
+    # Check for "interview"
+    if "interview" in q:
+        interview_patterns = ["interview", "assessment", "test", "coding round", "recruiter", "hiring"]
+        email_text = f"{email.get('sender', '')} {email.get('subject', '')} {email.get('snippet', '')}".lower()
+        if any(pat in email_text for pat in interview_patterns):
+            return True
+
+    # Check for sender-specific patterns like "from github" or "github mails"
+    if "github" in q:
+        if "github" in email.get("sender", "").lower():
+            return True
+    if "linkedin" in q:
+        if "linkedin" in email.get("sender", "").lower():
+            return True
+            
+    # Priority matches
+    if "urgent" in q:
+        if email.get("priority", "").lower() == "urgent":
+            return True
+    if "important" in q:
+        if email.get("priority", "").lower() == "important":
+            return True
+    if "promotion" in q or "promotions" in q or "promo" in q:
+        if email.get("priority", "").lower() == "low priority" or email.get("category", "").lower() == "promotions":
+            return True
+
+    # Check "from X"
+    from_match = re.search(r'from\s+([a-zA-Z0-9\-\.]+)', q)
+    if from_match:
+        sender_name = from_match.group(1).lower()
+        if sender_name in email.get("sender", "").lower():
+            return True
+
+    # 2. General text fallback search
+    summary_text = ""
+    summary = email.get("aiSummary") or email.get("summary")
+    if summary:
+        if isinstance(summary, list):
+            summary_text = " ".join(summary)
+        else:
+            summary_text = str(summary)
+            
+    match_fields = [
+        email.get("sender", ""),
+        email.get("subject", ""),
+        email.get("snippet", ""),
+        email.get("priority", ""),
+        summary_text
+    ]
+    
+    match_text = " ".join(match_fields).lower()
+    
+    # Split query into words to match all keywords
+    query_words = q.split()
+    if not query_words:
+        return False
+        
+    return all(word in match_text for word in query_words)
+
+
+def filter_emails_semantically(emails: list[dict], query: str) -> list[dict]:
+    """Filters a list of emails using semantic rules and text queries."""
+    if not query:
+        return emails
+    return [email for email in emails if match_email(email, query)]
