@@ -37,6 +37,7 @@ function App() {
         }
 
         const data = await fetchCurrentUser();
+        console.log("fetchCurrentUser returned:", data);
         setUser(data.authenticated ? data : null);
       } catch (err) {
         setAuthError(err.message || "Failed to verify authentication.");
@@ -97,6 +98,10 @@ function App() {
     }
   }
 
+  console.log({
+    authLoading,
+    user,
+  });
   if (authLoading || !user?.authenticated) {
     return <LoginScreen loading={authLoading} error={authError} />;
   }
