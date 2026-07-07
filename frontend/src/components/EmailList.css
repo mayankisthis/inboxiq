@@ -3,6 +3,7 @@
   flex-direction: column;
   height: 100%;
   min-width: 0;
+  min-height: 0;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border-strong);
 }
@@ -75,4 +76,348 @@
   .email-list-panel {
     border-right: none;
   }
+}
+
+/* Daily Digest Styles */
+.daily-digest {
+  margin: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.daily-digest:hover {
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+}
+
+.daily-digest__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1rem;
+  background: var(--color-sidebar);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.daily-digest__header:hover {
+  background: var(--color-surface-hover);
+}
+
+.daily-digest__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.daily-digest__icon {
+  color: var(--color-accent);
+}
+
+.daily-digest__header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}
+
+.daily-digest__meta {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.daily-digest__toggle-btn {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.625rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: transform 0.2s ease;
+}
+
+.daily-digest__toggle-btn--collapsed {
+  transform: rotate(-90deg);
+}
+
+.daily-digest__body {
+  padding: 1rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: #ffffff;
+}
+
+/* Grid Dashboard Layout */
+.daily-digest__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.daily-digest__metric-card {
+  padding: 0.625rem 0.5rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-digest__metric-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.daily-digest__metric-card--urgent .daily-digest__metric-indicator {
+  background: #DC2626;
+}
+
+.daily-digest__metric-card--important .daily-digest__metric-indicator {
+  background: #EA580C;
+}
+
+.daily-digest__metric-card--normal .daily-digest__metric-indicator {
+  background: #2563EB;
+}
+
+.daily-digest__metric-card--low .daily-digest__metric-indicator {
+  background: #64748b;
+}
+
+.daily-digest__metric-card--promotions {
+  background: #faf5ff;
+  border-color: #f3e8ff;
+}
+
+.daily-digest__metric-card--promotions .daily-digest__metric-val {
+  color: #7c3aed;
+}
+
+.daily-digest__metric-val {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.daily-digest__metric-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-top: 0.125rem;
+}
+
+/* Actions Checklist */
+.daily-digest__actions h4 {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.daily-digest__actions-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.daily-digest__action-item {
+  display: flex;
+  align-items: center;
+}
+
+.daily-digest__action-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  user-select: none;
+  width: 100%;
+}
+
+.daily-digest__checkbox {
+  margin-top: 0.15rem;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.daily-digest__action-text {
+  transition: color 0.15s ease, text-decoration 0.15s ease;
+}
+
+.daily-digest__action-label--checked .daily-digest__action-text {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+/* Search Form & Filter Chips Styles */
+.email-list-panel__search-wrapper {
+  padding: 0 1rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.email-list-panel__search-form {
+  width: 100%;
+}
+
+.email-list-panel__search-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  background: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 0 0.75rem;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.email-list-panel__search-container:focus-within {
+  background: #ffffff;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-soft);
+}
+
+.email-list-panel__search-icon {
+  color: var(--color-text-muted);
+  margin-right: 0.5rem;
+  flex-shrink: 0;
+}
+
+.email-list-panel__search-input {
+  width: 100%;
+  height: 2.25rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.email-list-panel__search-clear {
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.email-list-panel__search-clear:hover {
+  color: var(--color-text);
+}
+
+/* Filter Chips Container */
+.email-list-panel__filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding-top: 0.25rem;
+}
+
+.email-list-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  background: #e2e8f0;
+  border-radius: 6px;
+  color: #334155;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.email-list-panel__chip button {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.625rem;
+  margin-left: 0.125rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.email-list-panel__chip button:hover {
+  color: #0f172a;
+}
+
+.email-list-panel__clear-filters {
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  transition: color 0.15s;
+}
+
+.email-list-panel__clear-filters:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.email-list-panel__emails-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.daily-digest__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.daily-digest__subtitle {
+  margin: 0;
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.daily-digest__empty-today {
+  margin: 0;
+  padding: 1.25rem 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
 }

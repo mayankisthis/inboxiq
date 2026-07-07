@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { parseSearchQuery } from "../api";
 import EmailCard from "./EmailCard";
 import "./EmailList.css";
 
@@ -19,9 +21,138 @@ export default function EmailList({
   error,
   onSelectEmail,
   onOpenSidebar,
+  digest,
+  digestLoading,
 }) {
   const folderLabel = FOLDER_LABELS[activeFolder] || "Inbox";
   const isInbox = activeFolder === "inbox";
+  const [digestCollapsed, setDigestCollapsed] = useState(false);
+  const [checkedActions, setCheckedActions] = useState(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilters, setActiveFilters] = useState({
+    sender: null,
+    priority: null,
+    category: null,
+    keywords: [],
+    requires_action: false,
+    unread: false,
+    today: false,
+  });
+
+  const handleToggleAction = (action) => {
+    setCheckedActions((prev) => {
+      const next = new Set(prev);
+      if (next.has(action)) {
+        next.delete(action);
+      } else {
+        next.add(action);
+      }
+      return next;
+    });
+  };
+
+  const handleSearchSubmit = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    try {
+      const parsed = await parseSearchQuery(searchQuery);
+      setActiveFilters((prev) => ({
+        sender: parsed.sender || prev.sender,
+        priority: parsed.priority || prev.priority,
+        category: parsed.category || prev.category,
+        keywords: Array.from(new Set([...prev.keywords, ...(parsed.keywords || [])])),
+        requires_action: parsed.requires_action || prev.requires_action,
+        unread: parsed.unread || prev.unread,
+        today: parsed.today || prev.today,
+      }));
+      setSearchQuery("");
+    } catch (err) {
+      console.error("Failed to parse search query", err);
+    }
+  };
+
+  const hasAnyFilter = (filters) => {
+    return (
+      filters.sender ||
+      filters.priority ||
+      filters.category ||
+      filters.requires_action ||
+      filters.unread ||
+      filters.today ||
+      (filters.keywords && filters.keywords.length > 0)
+    );
+  };
+
+  const removeFilter = (key) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      [key]: key === "requires_action" || key === "unread" || key === "today" ? false : null,
+    }));
+  };
+
+  const removeKeyword = (kw) => {
+    setActiveFilters((prev) => ({
+      ...prev,
+      keywords: prev.keywords.filter((k) => k !== kw),
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      sender: null,
+      priority: null,
+      category: null,
+      keywords: [],
+      requires_action: false,
+      unread: false,
+      today: false,
+    });
+    setSearchQuery("");
+  };
+
+  const filteredEmails = emails.filter((email) => {
+    // 1. Live text search
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      const matchText = `${email.sender} ${email.subject} ${email.snippet}`.toLowerCase();
+      if (!matchText.includes(q)) return false;
+    }
+
+    // 2. Active filters
+    if (activeFilters.sender && !email.sender.toLowerCase().includes(activeFilters.sender.toLowerCase())) {
+      return false;
+    }
+    if (activeFilters.priority && email.priority !== activeFilters.priority) {
+      return false;
+    }
+    if (activeFilters.category && email.category !== activeFilters.category) {
+      return false;
+    }
+    if (activeFilters.requires_action) {
+      const hasActions = email.suggestedActions && email.suggestedActions.length > 0;
+      if (!hasActions) return false;
+    }
+    if (activeFilters.unread && readEmailIds.has(email.id)) {
+      return false;
+    }
+    if (activeFilters.today) {
+      const date = new Date(email.receivedAt);
+      const now = new Date();
+      const isToday =
+        date.getDate() === now.getDate() &&
+        date.getMonth() === now.getMonth() &&
+        date.getFullYear() === now.getFullYear();
+      if (!isToday) return false;
+    }
+    if (activeFilters.keywords && activeFilters.keywords.length > 0) {
+      const matchText = `${email.sender} ${email.subject} ${email.snippet}`.toLowerCase();
+      const hasAllKeywords = activeFilters.keywords.every((kw) => matchText.includes(kw.toLowerCase()));
+      if (!hasAllKeywords) return false;
+    }
+
+    return true;
+  });
 
   return (
     <section className="email-list-panel">
@@ -41,6 +172,100 @@ export default function EmailList({
           </p>
         </div>
       </header>
+
+      {isInbox && (
+        <div className="email-list-panel__search-wrapper">
+          <form className="email-list-panel__search-form" onSubmit={handleSearchSubmit}>
+            <div className="email-list-panel__search-container">
+              <svg
+                className="email-list-panel__search-icon"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                className="email-list-panel__search-input"
+                placeholder="Search mail or ask AI..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="email-list-panel__search-clear"
+                  onClick={() => setSearchQuery("")}
+                  aria-label="Clear query text"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </form>
+
+          {hasAnyFilter(activeFilters) && (
+            <div className="email-list-panel__filter-chips">
+              {activeFilters.sender && (
+                <span className="email-list-panel__chip">
+                  From: {activeFilters.sender}
+                  <button type="button" onClick={() => removeFilter("sender")}>✕</button>
+                </span>
+              )}
+              {activeFilters.priority && (
+                <span className="email-list-panel__chip">
+                  Priority: {activeFilters.priority}
+                  <button type="button" onClick={() => removeFilter("priority")}>✕</button>
+                </span>
+              )}
+              {activeFilters.category && (
+                <span className="email-list-panel__chip">
+                  Category: {activeFilters.category}
+                  <button type="button" onClick={() => removeFilter("category")}>✕</button>
+                </span>
+              )}
+              {activeFilters.requires_action && (
+                <span className="email-list-panel__chip">
+                  Requires Action
+                  <button type="button" onClick={() => removeFilter("requires_action")}>✕</button>
+                </span>
+              )}
+              {activeFilters.unread && (
+                <span className="email-list-panel__chip">
+                  Unread
+                  <button type="button" onClick={() => removeFilter("unread")}>✕</button>
+                </span>
+              )}
+              {activeFilters.today && (
+                <span className="email-list-panel__chip">
+                  Today
+                  <button type="button" onClick={() => removeFilter("today")}>✕</button>
+                </span>
+              )}
+              {activeFilters.keywords.map((kw) => (
+                <span key={kw} className="email-list-panel__chip">
+                  Keyword: {kw}
+                  <button type="button" onClick={() => removeKeyword(kw)}>✕</button>
+                </span>
+              ))}
+              <button
+                type="button"
+                className="email-list-panel__clear-filters"
+                onClick={clearAllFilters}
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {loading && (
         <div className="email-list-panel__state">
@@ -66,17 +291,133 @@ export default function EmailList({
         </div>
       )}
 
-      {!loading && !error && isInbox && emails.length > 0 && (
+      {!loading && !error && isInbox && emails.length > 0 && filteredEmails.length === 0 && (
+        <div className="email-list-panel__state">
+          <p>No emails match your search criteria.</p>
+        </div>
+      )}
+
+      {!loading && !error && isInbox && filteredEmails.length > 0 && (
         <div className="email-list-panel__scroll">
-          {emails.map((email) => (
-            <EmailCard
-              key={email.id}
-              email={email}
-              isSelected={selectedEmailId === email.id}
-              isUnread={!readEmailIds.has(email.id)}
-              onSelect={onSelectEmail}
-            />
-          ))}
+          {digest && !digestLoading && (
+            <div className="daily-digest">
+              <header
+                className="daily-digest__header"
+                onClick={() => setDigestCollapsed(!digestCollapsed)}
+              >
+                <div className="daily-digest__title-row">
+                  <svg
+                    className="daily-digest__icon"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 2v2M12 20v2M4 12H2M22 12h-2" />
+                    <path d="M17 6.5l-1.5 1.5M18.5 18.5l-1.5-1.5M5.5 5.5l1.5 1.5M5.5 18.5l1.5-1.5" />
+                    <circle cx="12" cy="12" r="3" fill="currentColor" opacity="0.3" />
+                  </svg>
+                  <div className="daily-digest__titles">
+                    <h3>Daily Digest</h3>
+                    <p className="daily-digest__subtitle">{digest.subtitle}</p>
+                  </div>
+                  <span className="daily-digest__meta">
+                    {digest.reading_time} read • {digest.total} emails
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={`daily-digest__toggle-btn ${
+                    digestCollapsed ? "daily-digest__toggle-btn--collapsed" : ""
+                  }`}
+                  aria-label="Toggle digest details"
+                >
+                  ▼
+                </button>
+              </header>
+
+              {!digestCollapsed && (
+                <div className="daily-digest__body">
+                  {digest.total === 0 ? (
+                    <p className="daily-digest__empty-today">No new emails today.</p>
+                  ) : (
+                    <>
+                      <div className="daily-digest__grid">
+                        <div className="daily-digest__metric-card daily-digest__metric-card--urgent">
+                          <span className="daily-digest__metric-indicator" />
+                          <div className="daily-digest__metric-val">{digest.urgent}</div>
+                          <div className="daily-digest__metric-label">Urgent</div>
+                        </div>
+                        <div className="daily-digest__metric-card daily-digest__metric-card--important">
+                          <span className="daily-digest__metric-indicator" />
+                          <div className="daily-digest__metric-val">{digest.important}</div>
+                          <div className="daily-digest__metric-label">Important</div>
+                        </div>
+                        <div className="daily-digest__metric-card daily-digest__metric-card--normal">
+                          <span className="daily-digest__metric-indicator" />
+                          <div className="daily-digest__metric-val">{digest.normal}</div>
+                          <div className="daily-digest__metric-label">Normal</div>
+                        </div>
+                        <div className="daily-digest__metric-card daily-digest__metric-card--low">
+                          <span className="daily-digest__metric-indicator" />
+                          <div className="daily-digest__metric-val">{digest.low_priority}</div>
+                          <div className="daily-digest__metric-label">Low</div>
+                        </div>
+                        <div className="daily-digest__metric-card daily-digest__metric-card--promotions">
+                          <div className="daily-digest__metric-val">{digest.promotions_filtered}</div>
+                          <div className="daily-digest__metric-label">Promos</div>
+                        </div>
+                      </div>
+
+                      {digest.actions && digest.actions.length > 0 && (
+                        <div className="daily-digest__actions">
+                          <h4>Action Items Checklist</h4>
+                          <ul className="daily-digest__actions-list">
+                            {digest.actions.map((action, idx) => {
+                              const isChecked = checkedActions.has(action);
+                              return (
+                                <li key={idx} className="daily-digest__action-item">
+                                  <label
+                                    className={`daily-digest__action-label ${
+                                      isChecked ? "daily-digest__action-label--checked" : ""
+                                    }`}
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      className="daily-digest__checkbox"
+                                      checked={isChecked}
+                                      onChange={() => handleToggleAction(action)}
+                                    />
+                                    <span className="daily-digest__action-text">{action}</span>
+                                  </label>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="email-list-panel__emails-container">
+            {filteredEmails.map((email) => (
+              <EmailCard
+                key={email.id}
+                email={email}
+                isSelected={selectedEmailId === email.id}
+                isUnread={!readEmailIds.has(email.id)}
+                onSelect={onSelectEmail}
+              />
+            ))}
+          </div>
         </div>
       )}
     </section>

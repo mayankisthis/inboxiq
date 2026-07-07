@@ -4,7 +4,7 @@
  */
 export function enrichEmails(emails = []) {
   return emails.map((email, index) => ({
-    id: `${email.received_at}-${index}`,
+    id: email.id || `${email.received_at}-${index}`,
     sender: email.sender,
     subject: email.subject,
     snippet: email.snippet,
@@ -12,5 +12,6 @@ export function enrichEmails(emails = []) {
     priority: email.priority || "Normal",
     category: email.category || null,
     aiSummary: email.aiSummary || null,
+    suggestedActions: email.suggestedActions || [],
   }));
 }

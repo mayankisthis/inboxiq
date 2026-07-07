@@ -3,6 +3,7 @@ import {
   fetchCurrentUser,
   fetchRecentEmails,
   logout,
+  fetchDigest,
 } from "./api";
 import EmailClient from "./components/EmailClient";
 import LoginScreen from "./components/LoginScreen";
@@ -18,6 +19,8 @@ function App() {
   const [emailsLoading, setEmailsLoading] = useState(false);
   const [emailsError, setEmailsError] = useState(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [digest, setDigest] = useState(null);
+  const [digestLoading, setDigestLoading] = useState(false);
 
   useEffect(() => {
     async function loadUser() {
@@ -54,15 +57,21 @@ function App() {
 
     async function loadEmails() {
       setEmailsLoading(true);
+      setDigestLoading(true);
       setEmailsError(null);
 
       try {
-        const data = await fetchRecentEmails();
-        setEmails(enrichEmails(data.emails || []));
+        const [emailsData, digestData] = await Promise.all([
+          fetchRecentEmails(),
+          fetchDigest(),
+        ]);
+        setEmails(enrichEmails(emailsData.emails || []));
+        setDigest(digestData);
       } catch (err) {
         setEmailsError(err.message || "Failed to load recent emails.");
       } finally {
         setEmailsLoading(false);
+        setDigestLoading(false);
       }
     }
 
@@ -74,6 +83,7 @@ function App() {
       await logout();
       setUser(null);
       setEmails([]);
+      setDigest(null);
       setAuthError(null);
       setEmailsError(null);
     } catch (err) {
@@ -93,6 +103,8 @@ function App() {
       userEmail={user.email}
       onLogout={handleLogout}
       onRefreshEmails={() => setRefreshTrigger((prev) => prev + 1)}
+      digest={digest}
+      digestLoading={digestLoading}
     />
   );
 }

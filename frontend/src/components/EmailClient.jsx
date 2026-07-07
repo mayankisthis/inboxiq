@@ -1,21 +1,75 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import EmailList from "./EmailList";
 import EmailPreview from "./EmailPreview";
 import RulesModal from "./RulesModal";
+import { fetchEmailDetail } from "../api";
 import "./EmailClient.css";
 
-export default function EmailClient({ emails, loading, error, userEmail, onLogout, onRefreshEmails }) {
+export default function EmailClient({
+  emails,
+  loading,
+  error,
+  userEmail,
+  onLogout,
+  onRefreshEmails,
+  digest,
+  digestLoading,
+}) {
   const [activeFolder, setActiveFolder] = useState("inbox");
   const [selectedEmailId, setSelectedEmailId] = useState(null);
   const [readEmailIds, setReadEmailIds] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rulesModalOpen, setRulesModalOpen] = useState(false);
 
+  const [cachedDetails, setCachedDetails] = useState({});
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState(null);
+
   const selectedEmail = useMemo(
     () => emails.find((email) => email.id === selectedEmailId) ?? null,
     [emails, selectedEmailId]
   );
+
+  useEffect(() => {
+    if (!selectedEmailId) {
+      setPreviewError(null);
+      return;
+    }
+
+    if (cachedDetails[selectedEmailId]) {
+      return; // already cached
+    }
+
+    let isMounted = true;
+    async function loadDetail() {
+      setPreviewLoading(true);
+      setPreviewError(null);
+      try {
+        const detail = await fetchEmailDetail(selectedEmailId);
+        if (isMounted) {
+          setCachedDetails((prev) => ({
+            ...prev,
+            [selectedEmailId]: detail,
+          }));
+        }
+      } catch (err) {
+        if (isMounted) {
+          setPreviewError(err.message || "Failed to load email body.");
+        }
+      } finally {
+        if (isMounted) {
+          setPreviewLoading(false);
+        }
+      }
+    }
+
+    loadDetail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedEmailId, cachedDetails]);
 
   function handleSelectEmail(emailId) {
     setSelectedEmailId(emailId);
@@ -58,9 +112,17 @@ export default function EmailClient({ emails, loading, error, userEmail, onLogou
           error={error}
           onSelectEmail={handleSelectEmail}
           onOpenSidebar={() => setSidebarOpen(true)}
+          digest={digest}
+          digestLoading={digestLoading}
         />
 
-        <EmailPreview email={selectedEmail} onClose={handleClosePreview} />
+        <EmailPreview
+          email={selectedEmail}
+          cachedDetail={cachedDetails[selectedEmailId]}
+          isLoading={previewLoading}
+          error={previewError}
+          onClose={handleClosePreview}
+        />
       </div>
 
       <RulesModal

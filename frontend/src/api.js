@@ -82,3 +82,48 @@ export async function saveRules(rules) {
 
   return response.json();
 }
+
+export async function fetchDigest() {
+  const tzOffset = new Date().getTimezoneOffset();
+  const response = await fetch(`${API_BASE_URL}/api/emails/digest?tz_offset=${tzOffset}`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to fetch daily digest (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function parseSearchQuery(query) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/search`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to parse search query (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function fetchEmailDetail(messageId) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/message/${messageId}`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to fetch email details (${response.status})`);
+  }
+
+  return response.json();
+}
