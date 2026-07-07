@@ -444,3 +444,485 @@
 .email-body-link:hover {
   color: #1d4ed8;
 }
+
+/* AI Reply Generator Styles */
+.email-preview__reply-section {
+  margin: 2.5rem 0 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-muted, #f8fafc);
+}
+
+.email-preview__reply-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.email-preview__reply-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.email-preview__reply-styles {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+}
+
+.email-preview__reply-style-btn {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.email-preview__reply-style-btn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.email-preview__reply-style-btn--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.email-preview__reply-style-btn--active:hover {
+  color: #fff;
+}
+
+.email-preview__reply-generate-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-accent) 0%, #4f46e5 100%);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.email-preview__reply-generate-btn:hover {
+  opacity: 0.95;
+}
+
+.email-preview__reply-generate-btn:active {
+  transform: scale(0.98);
+}
+
+.email-preview__reply-draft-box {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.email-preview__reply-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.email-preview__reply-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.email-preview__reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.email-preview__reply-action-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.email-preview__reply-action-btn:hover {
+  background-color: var(--color-surface-hover, #f1f5f9);
+}
+
+.email-preview__reply-action-btn--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.email-preview__reply-action-btn--primary:hover {
+  background: #1d4ed8;
+}
+
+.email-preview__reply-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  padding: 2.5rem 0;
+}
+
+.email-preview__reply-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s infinite linear;
+}
+
+@keyframes spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.email-preview__toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  color: #fff;
+  min-width: 280px;
+  max-width: 380px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: toast-slide-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.email-preview__toast--success {
+  background: #10b981;
+}
+
+.email-preview__toast--error {
+  background: #ef4444;
+}
+
+.email-preview__toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.email-preview__toast-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.email-preview__toast-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.email-preview__toast-message {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.email-preview__toast-description {
+  margin: 0;
+  font-size: 0.75rem;
+  opacity: 0.9;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.email-preview__toast-icon svg {
+  stroke: currentColor;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* AI Reply drafting transitions & animations */
+.email-preview__reply-section {
+  margin: 2.5rem 0 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-muted, #f8fafc);
+  animation: card-fade-in 0.25s ease-out forwards;
+}
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.email-preview__reply-draft-box {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  animation: textarea-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes textarea-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.email-preview__reply-textarea {
+  width: 100%;
+  padding: 0.75rem 0.75rem 2.25rem; /* padded bottom to clear character counter */
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  resize: none;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.email-preview__reply-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.email-preview__char-count {
+  position: absolute;
+  bottom: 0.625rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  user-select: none;
+}
+
+.email-preview__char-count--orange {
+  color: #f97316;
+}
+
+.email-preview__char-count--red {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* Sticky Action Bar styling */
+.email-preview__reply-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  margin-top: 1.25rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-muted, #f8fafc);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.email-preview__reply-sticky-actions-left,
+.email-preview__reply-sticky-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Buttons style declarations */
+.email-preview__reply-action-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.18s ease-in-out;
+}
+
+.email-preview__reply-action-btn:hover:not(:disabled) {
+  background-color: var(--color-surface-hover, #f1f5f9);
+  border-color: var(--color-border-strong);
+}
+
+.email-preview__reply-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.email-preview__reply-action-btn--primary,
+.email-preview__reply-action-btn--send {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.email-preview__reply-action-btn--primary:hover:not(:disabled),
+.email-preview__reply-action-btn--send:hover:not(:disabled) {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+}
+
+/* Quick Actions Toolbar and Star Styles */
+.email-preview__star-icon-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.15s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-preview__star-icon-btn:hover:not(:disabled) {
+  transform: scale(1.25);
+  color: #fbbf24;
+}
+
+.email-preview__star-icon-btn--active {
+  color: #fbbf24;
+}
+
+.email-preview__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+  flex-wrap: wrap;
+}
+
+.email-preview__toolbar-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px; /* rounded layout */
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.email-preview__toolbar-btn:hover:not(:disabled) {
+  background-color: var(--color-surface-hover, #f1f5f9);
+  border-color: var(--color-border-strong);
+  transform: translateY(-1px);
+}
+
+.email-preview__toolbar-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.email-preview__toolbar-btn--starred {
+  background: #fef8e7;
+  border-color: #fde68a;
+  color: #b45309;
+}
+
+.email-preview__toolbar-btn--starred:hover:not(:disabled) {
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.email-preview__toolbar-btn--archive {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.email-preview__toolbar-btn--archive:hover:not(:disabled) {
+  background: #fecaca;
+  border-color: #f87171;
+}
+
+/* Toast Undo action button styles */
+.email-client__toast-action-btn {
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.15s ease;
+}
+
+.email-client__toast-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}

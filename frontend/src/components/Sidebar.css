@@ -112,6 +112,18 @@
   color: var(--color-accent);
 }
 
+.sidebar__badge--unread {
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.45rem;
+  border-radius: 999px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
 .sidebar__footer {
   padding: 1rem 0.625rem 0;
   border-top: 1px solid var(--color-border);

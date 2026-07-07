@@ -127,3 +127,106 @@ export async function fetchEmailDetail(messageId) {
 
   return response.json();
 }
+
+export async function searchEmails(query) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/search?q=${encodeURIComponent(query)}`, {
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to search emails (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function generateEmailReply(emailId, style) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/reply`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ emailId, style }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to generate reply (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function sendEmailReply(emailId, reply) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/send-reply`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ emailId, reply }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to send reply (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function toggleEmailStarred(emailId, starred) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/${emailId}/star`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ starred }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to update star state (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function toggleEmailRead(emailId, read) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/${emailId}/read`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ read }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to update read state (${response.status})`);
+  }
+
+  return response.json();
+}
+
+export async function toggleEmailArchived(emailId, archived) {
+  const response = await fetch(`${API_BASE_URL}/api/emails/${emailId}/archive`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ archived }),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || `Failed to update archive state (${response.status})`);
+  }
+
+  return response.json();
+}

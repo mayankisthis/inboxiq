@@ -1,6 +1,8 @@
+import { useState, useEffect, useRef } from "react";
 import { formatEmailFullDate } from "../utils/formatDate";
 import { getPriorityClass } from "../utils/priority";
 import { getAvatarColor } from "../utils/avatar";
+import { generateEmailReply, sendEmailReply } from "../api";
 import "./EmailPreview.css";
 
 function getActionIcon(action = "") {
@@ -16,7 +18,85 @@ function getActionIcon(action = "") {
   return "➡️";
 }
 
-export default function EmailPreview({ email, cachedDetail, isLoading, error, onClose }) {
+export default function EmailPreview({
+  email,
+  cachedDetail,
+  isLoading,
+  error,
+  actionPending,
+  onToggleStar,
+  onToggleRead,
+  onArchive,
+  onClose,
+  setToast,
+}) {
+  const [replyStyle, setReplyStyle] = useState("Professional");
+  const [replyDraft, setReplyDraft] = useState("");
+  const [replyLoading, setReplyLoading] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [sendingReply, setSendingReply] = useState(false);
+  
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    setReplyDraft("");
+    setReplyLoading(false);
+    setCopySuccess(false);
+    setSendingReply(false);
+  }, [email?.id]);
+
+  // Auto-expand textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [replyDraft]);
+
+  const handleGenerateReply = async () => {
+    setReplyLoading(true);
+    setToast(null);
+    try {
+      const data = await generateEmailReply(email.id, replyStyle);
+      setReplyDraft(data.reply || "");
+    } catch (err) {
+      setToast({
+        message: "Unable to generate reply",
+        type: "error",
+        description: err.message || ""
+      });
+    } finally {
+      setReplyLoading(false);
+    }
+  };
+
+  const handleCopyReply = () => {
+    navigator.clipboard.writeText(replyDraft);
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
+
+  const handleSendReply = async () => {
+    setSendingReply(true);
+    setToast(null);
+    try {
+      await sendEmailReply(email.id, replyDraft);
+      setToast({
+        message: "Reply sent successfully.",
+        type: "success"
+      });
+      setReplyDraft("");
+    } catch (err) {
+      setToast({
+        message: "Unable to send reply",
+        type: "error",
+        description: err.message || ""
+      });
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
   const renderBodyText = (text) => {
     if (!text) return null;
     
@@ -120,7 +200,18 @@ export default function EmailPreview({ email, cachedDetail, isLoading, error, on
     <section className="email-preview">
       <header className="email-preview__header">
         <div className="email-preview__header-top">
-          <h2 className="email-preview__subject">{email.subject}</h2>
+          <div className="email-preview__subject-wrapper" style={{ display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+            <h2 className="email-preview__subject" style={{ margin: 0 }}>{email.subject}</h2>
+            <button
+              type="button"
+              className={`email-preview__star-icon-btn ${email.isStarred ? "email-preview__star-icon-btn--active" : ""}`}
+              onClick={() => onToggleStar(email.id)}
+              disabled={actionPending}
+              aria-label={email.isStarred ? "Unstar email" : "Star email"}
+            >
+              {email.isStarred ? "★" : "☆"}
+            </button>
+          </div>
           <button
             type="button"
             className="email-preview__close"
@@ -163,6 +254,34 @@ export default function EmailPreview({ email, cachedDetail, isLoading, error, on
               Category
             </span>
           )}
+        </div>
+
+        {/* Toolbar layout */}
+        <div className="email-preview__toolbar">
+          <button
+            type="button"
+            className={`email-preview__toolbar-btn ${email.isStarred ? "email-preview__toolbar-btn--starred" : ""}`}
+            onClick={() => onToggleStar(email.id)}
+            disabled={actionPending}
+          >
+            {email.isStarred ? "★ Starred" : "☆ Star"}
+          </button>
+          <button
+            type="button"
+            className="email-preview__toolbar-btn"
+            onClick={() => onToggleRead(email.id)}
+            disabled={actionPending}
+          >
+            ✓ {email.isUnread ? "Mark as Read" : "Mark as Unread"}
+          </button>
+          <button
+            type="button"
+            className="email-preview__toolbar-btn email-preview__toolbar-btn--archive"
+            onClick={() => onArchive(email.id)}
+            disabled={actionPending}
+          >
+            📦 Archive
+          </button>
         </div>
       </header>
 
@@ -247,9 +366,124 @@ export default function EmailPreview({ email, cachedDetail, isLoading, error, on
         ) : error && !cachedDetail ? (
           renderError(error)
         ) : (
-          renderBodyText(cachedDetail?.body || email.snippet)
+          <>
+            {renderBodyText(cachedDetail?.body || email.snippet)}
+
+            {/* AI Reply Generator Section */}
+            <div className="email-preview__reply-section">
+              <div className="email-preview__reply-header">
+                <h3 className="email-preview__reply-title">AI Reply Draft</h3>
+                <div className="email-preview__reply-styles">
+                  {["Professional", "Friendly", "Formal", "Short"].map((style) => (
+                    <button
+                      key={style}
+                      type="button"
+                      className={`email-preview__reply-style-btn ${
+                        replyStyle === style ? "email-preview__reply-style-btn--active" : ""
+                      }`}
+                      onClick={() => setReplyStyle(style)}
+                      disabled={replyLoading || sendingReply}
+                    >
+                      {style}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {replyLoading ? (
+                <div className="email-preview__reply-loading">
+                  <div className="email-preview__reply-spinner"></div>
+                  <span>Generating your draft response...</span>
+                </div>
+              ) : (
+                <>
+                  {replyDraft && (
+                    <div className="email-preview__reply-draft-box">
+                      <textarea
+                        ref={textareaRef}
+                        className="email-preview__reply-textarea"
+                        value={replyDraft}
+                        onChange={(e) => setReplyDraft(e.target.value)}
+                        placeholder="Edit your reply here..."
+                        disabled={sendingReply}
+                        maxLength={2000}
+                      />
+                      <div className={`email-preview__char-count ${
+                        replyDraft.length > 1950
+                          ? "email-preview__char-count--red"
+                          : replyDraft.length > 1800
+                          ? "email-preview__char-count--orange"
+                          : ""
+                      }`}>
+                        {replyDraft.length} / 2000
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Sticky Action Bar */}
+              <div className="email-preview__reply-sticky-actions">
+                <div className="email-preview__reply-sticky-actions-left">
+                  <button
+                    type="button"
+                    className="email-preview__reply-action-btn email-preview__reply-action-btn--generate"
+                    disabled={replyLoading || sendingReply}
+                    onClick={handleGenerateReply}
+                  >
+                    {replyLoading ? (
+                      <>
+                        <div className="email-preview__reply-spinner" style={{ width: "0.875rem", height: "0.875rem", display: "inline-block", marginRight: "0.375rem" }}></div>
+                        Generating...
+                      </>
+                    ) : "Generate Reply"}
+                  </button>
+
+                  {replyDraft && !replyLoading && (
+                    <button
+                      type="button"
+                      className="email-preview__reply-action-btn email-preview__reply-action-btn--regenerate"
+                      disabled={sendingReply}
+                      onClick={handleGenerateReply}
+                    >
+                      ↻ Regenerate
+                    </button>
+                  )}
+                </div>
+
+                <div className="email-preview__reply-sticky-actions-right">
+                  {replyDraft && !replyLoading && (
+                    <>
+                      <button
+                        type="button"
+                        className="email-preview__reply-action-btn email-preview__reply-action-btn--copy"
+                        disabled={sendingReply}
+                        onClick={handleCopyReply}
+                      >
+                        {copySuccess ? "✓ Copied" : "📋 Copy"}
+                      </button>
+                      <button
+                        type="button"
+                        className="email-preview__reply-action-btn email-preview__reply-action-btn--send"
+                        disabled={sendingReply}
+                        onClick={handleSendReply}
+                      >
+                        {sendingReply ? (
+                          <>
+                            <div className="email-preview__reply-spinner" style={{ width: "0.875rem", height: "0.875rem", display: "inline-block", marginRight: "0.375rem", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }}></div>
+                            Sending...
+                          </>
+                        ) : "Send Reply"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </article>
+
     </section>
   );
 }

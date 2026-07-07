@@ -172,3 +172,28 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.email-card__star-btn {
+  background: none;
+  border: none;
+  font-size: 1.125rem;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  line-height: 1;
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.15s ease;
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.email-card__star-btn:hover {
+  transform: scale(1.25);
+  color: #fbbf24;
+}
+
+.email-card__star-btn--active {
+  color: #fbbf24;
+}

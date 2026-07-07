@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { parseSearchQuery } from "../api";
+import { useState, useEffect, useMemo } from "react";
+import { parseSearchQuery, searchEmails } from "../api";
 import EmailCard from "./EmailCard";
 import "./EmailList.css";
 
@@ -23,12 +23,18 @@ export default function EmailList({
   onOpenSidebar,
   digest,
   digestLoading,
+  onToggleStar,
 }) {
   const folderLabel = FOLDER_LABELS[activeFolder] || "Inbox";
   const isInbox = activeFolder === "inbox";
   const [digestCollapsed, setDigestCollapsed] = useState(false);
   const [checkedActions, setCheckedActions] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [searchResultEmails, setSearchResultEmails] = useState(null);
+  const [searchCache, setSearchCache] = useState({});
+  const [searchLoading, setSearchLoading] = useState(false);
+
   const [activeFilters, setActiveFilters] = useState({
     sender: null,
     priority: null,
@@ -38,6 +44,68 @@ export default function EmailList({
     unread: false,
     today: false,
   });
+
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setDebouncedQuery("");
+    setSearchResultEmails(null);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const q = debouncedQuery.trim();
+    if (q === "") {
+      setSearchResultEmails(null);
+      return;
+    }
+
+    if (searchCache[q]) {
+      setSearchResultEmails(searchCache[q]);
+      return;
+    }
+
+    let isMounted = true;
+    async function executeSearch() {
+      setSearchLoading(true);
+      try {
+        const data = await searchEmails(q);
+        const fetched = data.emails || [];
+        if (isMounted) {
+          const mapped = fetched.map((email) => ({
+            id: email.id,
+            sender: email.sender,
+            subject: email.subject,
+            snippet: email.snippet,
+            receivedAt: email.date || email.received_at,
+            priority: email.priority || "Normal",
+            category: email.category || null,
+            aiSummary: email.summary || email.aiSummary || null,
+            suggestedActions: email.suggestedActions || [],
+          }));
+          setSearchCache((prev) => ({ ...prev, [q]: mapped }));
+          setSearchResultEmails(mapped);
+        }
+      } catch (err) {
+        console.error("Failed to execute semantic search:", err);
+      } finally {
+        if (isMounted) {
+          setSearchLoading(false);
+        }
+      }
+    }
+
+    executeSearch();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [debouncedQuery]);
 
   const handleToggleAction = (action) => {
     setCheckedActions((prev) => {
@@ -109,50 +177,105 @@ export default function EmailList({
       today: false,
     });
     setSearchQuery("");
+    setDebouncedQuery("");
+    setSearchResultEmails(null);
   };
 
-  const filteredEmails = emails.filter((email) => {
-    // 1. Live text search
-    if (searchQuery.trim() !== "") {
-      const q = searchQuery.toLowerCase();
-      const matchText = `${email.sender} ${email.subject} ${email.snippet}`.toLowerCase();
-      if (!matchText.includes(q)) return false;
+  const filteredEmails = useMemo(() => {
+    let sourceEmails = (searchResultEmails !== null) ? searchResultEmails : emails;
+
+    // Filter by Folder first
+    if (activeFolder === "starred") {
+      sourceEmails = sourceEmails.filter((email) => email.isStarred);
+    } else if (activeFolder === "important") {
+      sourceEmails = sourceEmails.filter((email) => email.priority === "Urgent" || email.priority === "Important" || email.labels?.includes("IMPORTANT"));
+    } else if (activeFolder === "promotions") {
+      sourceEmails = sourceEmails.filter((email) => email.category === "Promotions" || email.labels?.includes("CATEGORY_PROMOTIONS"));
+    } else if (activeFolder === "sent") {
+      sourceEmails = sourceEmails.filter((email) => email.labels?.includes("SENT"));
+    } else if (activeFolder === "drafts") {
+      sourceEmails = sourceEmails.filter((email) => email.labels?.includes("DRAFT"));
+    } else if (activeFolder === "inbox") {
+      // Default to inbox: only show emails that have INBOX label (if labels exist)
+      sourceEmails = sourceEmails.filter((email) => !email.labels || email.labels.includes("INBOX"));
     }
 
-    // 2. Active filters
-    if (activeFilters.sender && !email.sender.toLowerCase().includes(activeFilters.sender.toLowerCase())) {
-      return false;
-    }
-    if (activeFilters.priority && email.priority !== activeFilters.priority) {
-      return false;
-    }
-    if (activeFilters.category && email.category !== activeFilters.category) {
-      return false;
-    }
-    if (activeFilters.requires_action) {
-      const hasActions = email.suggestedActions && email.suggestedActions.length > 0;
-      if (!hasActions) return false;
-    }
-    if (activeFilters.unread && readEmailIds.has(email.id)) {
-      return false;
-    }
-    if (activeFilters.today) {
-      const date = new Date(email.receivedAt);
-      const now = new Date();
-      const isToday =
-        date.getDate() === now.getDate() &&
-        date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear();
-      if (!isToday) return false;
-    }
-    if (activeFilters.keywords && activeFilters.keywords.length > 0) {
-      const matchText = `${email.sender} ${email.subject} ${email.snippet}`.toLowerCase();
-      const hasAllKeywords = activeFilters.keywords.every((kw) => matchText.includes(kw.toLowerCase()));
-      if (!hasAllKeywords) return false;
-    }
+    return sourceEmails.filter((email) => {
+      // 1. Live text search / local filtering while typing
+      if (searchQuery.trim() !== "" && searchResultEmails === null) {
+        const q = searchQuery.toLowerCase();
+        
+        if (q.includes("github") && !email.sender.toLowerCase().includes("github")) return false;
+        if (q.includes("linkedin") && !email.sender.toLowerCase().includes("linkedin")) return false;
+        if (q.includes("urgent") && email.priority.toLowerCase() !== "urgent") return false;
+        if (q.includes("important") && email.priority.toLowerCase() !== "important") return false;
+        if (q.includes("promotion") && email.priority.toLowerCase() !== "low priority" && email.category !== "Promotions") return false;
+        if (q.includes("today")) {
+          const date = new Date(email.receivedAt);
+          const now = new Date();
+          const isToday =
+            date.getDate() === now.getDate() &&
+            date.getMonth() === now.getMonth() &&
+            date.getFullYear() === now.getFullYear();
+          if (!isToday) return false;
+        }
+        if (q.includes("yesterday")) {
+          const date = new Date(email.receivedAt);
+          const now = new Date();
+          const yesterday = new Date(now);
+          yesterday.setDate(now.getDate() - 1);
+          const isYesterday =
+            date.getDate() === yesterday.getDate() &&
+            date.getMonth() === yesterday.getMonth() &&
+            date.getFullYear() === yesterday.getFullYear();
+          if (!isYesterday) return false;
+        }
 
-    return true;
-  });
+        if (!q.includes("github") && !q.includes("linkedin") && !q.includes("urgent") && !q.includes("important") && !q.includes("promotion") && !q.includes("today") && !q.includes("yesterday")) {
+          const summaryText = Array.isArray(email.aiSummary) ? email.aiSummary.join(" ") : (email.aiSummary || "");
+          const matchText = `${email.sender} ${email.subject} ${email.snippet} ${email.priority} ${summaryText}`.toLowerCase();
+          const queryWords = q.split(/\s+/);
+          const matchesAll = queryWords.every((word) => matchText.includes(word));
+          if (!matchesAll) return false;
+        }
+      }
+
+      // 2. Active filters
+      if (activeFilters.sender && !email.sender.toLowerCase().includes(activeFilters.sender.toLowerCase())) {
+        return false;
+      }
+      if (activeFilters.priority && email.priority !== activeFilters.priority) {
+        return false;
+      }
+      if (activeFilters.category && email.category !== activeFilters.category) {
+        return false;
+      }
+      if (activeFilters.requires_action) {
+        const hasActions = email.suggestedActions && email.suggestedActions.length > 0;
+        if (!hasActions) return false;
+      }
+      if (activeFilters.unread && !email.isUnread) {
+        return false;
+      }
+      if (activeFilters.today) {
+        const date = new Date(email.receivedAt);
+        const now = new Date();
+        const isToday =
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear();
+        if (!isToday) return false;
+      }
+      if (activeFilters.keywords && activeFilters.keywords.length > 0) {
+        const summaryText = Array.isArray(email.aiSummary) ? email.aiSummary.join(" ") : (email.aiSummary || "");
+        const matchText = `${email.sender} ${email.subject} ${email.snippet} ${summaryText}`.toLowerCase();
+        const hasAllKeywords = activeFilters.keywords.every((kw) => matchText.includes(kw.toLowerCase()));
+        if (!hasAllKeywords) return false;
+      }
+
+      return true;
+    });
+  }, [emails, searchResultEmails, searchQuery, activeFilters, activeFolder]);
 
   return (
     <section className="email-list-panel">
@@ -168,12 +291,12 @@ export default function EmailList({
         <div>
           <h2 className="email-list-panel__title">{folderLabel}</h2>
           <p className="email-list-panel__subtitle">
-            {isInbox ? "Latest messages from Gmail" : "Coming soon"}
+            {activeFolder === "inbox" ? "Latest messages from Gmail" : `Messages in ${folderLabel}`}
           </p>
         </div>
       </header>
 
-      {isInbox && (
+      {true && (
         <div className="email-list-panel__search-wrapper">
           <form className="email-list-panel__search-form" onSubmit={handleSearchSubmit}>
             <div className="email-list-panel__search-container">
@@ -202,7 +325,7 @@ export default function EmailList({
                 <button
                   type="button"
                   className="email-list-panel__search-clear"
-                  onClick={() => setSearchQuery("")}
+                  onClick={handleClearSearch}
                   aria-label="Clear query text"
                 >
                   ✕
@@ -293,7 +416,8 @@ export default function EmailList({
 
       {!loading && !error && isInbox && emails.length > 0 && filteredEmails.length === 0 && (
         <div className="email-list-panel__state">
-          <p>No emails match your search criteria.</p>
+          <p className="email-list-panel__empty-title">No emails found</p>
+          <p className="email-list-panel__empty-subtitle">Try another keyword.</p>
         </div>
       )}
 
@@ -413,8 +537,9 @@ export default function EmailList({
                 key={email.id}
                 email={email}
                 isSelected={selectedEmailId === email.id}
-                isUnread={!readEmailIds.has(email.id)}
+                isUnread={email.isUnread}
                 onSelect={onSelectEmail}
+                onToggleStar={onToggleStar}
               />
             ))}
           </div>

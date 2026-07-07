@@ -98,6 +98,7 @@ function App() {
   return (
     <EmailClient
       emails={emails}
+      setEmails={setEmails}
       loading={emailsLoading}
       error={emailsError}
       userEmail={user.email}

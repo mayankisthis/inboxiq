@@ -3,7 +3,7 @@ import { getPriorityClass } from "../utils/priority";
 import { getAvatarColor } from "../utils/avatar";
 import "./EmailCard.css";
 
-export default function EmailCard({ email, isSelected, isUnread, onSelect }) {
+export default function EmailCard({ email, isSelected, isUnread, onSelect, onToggleStar }) {
   const priorityClass = getPriorityClass(email.priority);
 
   return (
@@ -42,6 +42,17 @@ export default function EmailCard({ email, isSelected, isUnread, onSelect }) {
 
         <div className="email-card__row email-card__row--meta">
           <span className="email-card__subject">{email.subject}</span>
+          <button
+            type="button"
+            className={`email-card__star-btn ${email.isStarred ? "email-card__star-btn--active" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleStar(email.id);
+            }}
+            aria-label={email.isStarred ? "Unstar email" : "Star email"}
+          >
+            {email.isStarred ? "★" : "☆"}
+          </button>
 
           {email.category && (
             <span className="email-card__badge email-card__badge--category">

@@ -13,5 +13,8 @@ export function enrichEmails(emails = []) {
     category: email.category || null,
     aiSummary: email.aiSummary || null,
     suggestedActions: email.suggestedActions || [],
+    isStarred: email.is_starred || false,
+    isUnread: email.is_unread || false,
+    labels: email.labels || [],
   }));
 }

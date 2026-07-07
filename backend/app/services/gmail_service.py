@@ -117,7 +117,9 @@ def verify_authenticated_user(credentials: Credentials) -> str:
   Does not fetch individual messages.
   """
   service = _build_gmail_service(credentials)
-  profile = service.users().getProfile(userId="emailAddress").execute() if hasattr(service.users(), "getProfile") else service.users().getProfile(userId="me").execute()
+  
+  profile = service.users().getProfile(userId="me").execute()
+
   email = profile.get("emailAddress")
 
   if not email:
@@ -166,6 +168,10 @@ def get_recent_emails(credentials: Credentials, limit: int = 10, page_token: str
       tz=timezone.utc,
     ).isoformat()
  
+    label_ids = detail.get("labelIds", [])
+    is_unread = "UNREAD" in label_ids
+    is_starred = "STARRED" in label_ids
+
     emails.append(
       {
         "id": message_ref["id"],
@@ -173,6 +179,9 @@ def get_recent_emails(credentials: Credentials, limit: int = 10, page_token: str
         "subject": subject,
         "snippet": snippet,
         "received_at": received_at,
+        "is_unread": is_unread,
+        "is_starred": is_starred,
+        "labels": label_ids,
       }
     )
  
@@ -205,6 +214,10 @@ def get_email_by_id(credentials: Credentials, message_id: str) -> dict:
   except Exception:
     body_text = snippet
 
+  label_ids = detail.get("labelIds", [])
+  is_unread = "UNREAD" in label_ids
+  is_starred = "STARRED" in label_ids
+
   return {
     "id": message_id,
     "sender": sender,
@@ -212,4 +225,49 @@ def get_email_by_id(credentials: Credentials, message_id: str) -> dict:
     "date": received_at,
     "snippet": snippet,
     "body": body_text,
+    "is_unread": is_unread,
+    "is_starred": is_starred,
+    "labels": label_ids,
   }
+
+
+def modify_email_labels(
+    credentials: Credentials,
+    message_id: str,
+    add_labels: list[str] = None,
+    remove_labels: list[str] = None
+) -> dict:
+  """Helper to modify labels on a Gmail message."""
+  service = _build_gmail_service(credentials)
+  body = {}
+  if add_labels:
+    body["addLabelIds"] = add_labels
+  if remove_labels:
+    body["removeLabelIds"] = remove_labels
+    
+  return service.users().messages().modify(
+      userId="me",
+      id=message_id,
+      body=body
+  ).execute()
+
+
+def set_email_starred(credentials: Credentials, message_id: str, starred: bool) -> dict:
+  if starred:
+    return modify_email_labels(credentials, message_id, add_labels=["STARRED"])
+  else:
+    return modify_email_labels(credentials, message_id, remove_labels=["STARRED"])
+
+
+def set_email_read(credentials: Credentials, message_id: str, read: bool) -> dict:
+  if read:
+    return modify_email_labels(credentials, message_id, remove_labels=["UNREAD"])
+  else:
+    return modify_email_labels(credentials, message_id, add_labels=["UNREAD"])
+
+
+def set_email_archived(credentials: Credentials, message_id: str, archived: bool) -> dict:
+  if archived:
+    return modify_email_labels(credentials, message_id, remove_labels=["INBOX"])
+  else:
+    return modify_email_labels(credentials, message_id, add_labels=["INBOX"])

@@ -10,6 +10,7 @@ const FOLDERS = [
 ];
 
 export default function Sidebar({
+  emails = [],
   activeFolder,
   onFolderChange,
   userEmail,
@@ -18,6 +19,7 @@ export default function Sidebar({
   onClose,
   onOpenRulesModal,
 }) {
+  const unreadCount = emails.filter((email) => email.isUnread).length;
   return (
     <>
       {isOpen && (
@@ -52,8 +54,8 @@ export default function Sidebar({
                 {folder.icon}
               </span>
               <span className="sidebar__item-label">{folder.label}</span>
-              {folder.id === "inbox" && (
-                <span className="sidebar__badge sidebar__badge--future">Live</span>
+              {folder.id === "inbox" && unreadCount > 0 && (
+                <span className="sidebar__badge sidebar__badge--unread">{unreadCount}</span>
               )}
             </button>
           ))}
